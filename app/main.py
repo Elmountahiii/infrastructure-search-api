@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from app.models.document import DocumentCreate
+
 
 app = FastAPI(
     title="Infrastructure Search API",
@@ -10,3 +12,7 @@ app = FastAPI(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.post("/document")
+def create_document(document:DocumentCreate):
+  return document
