@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI
 
 from app.extractors.html import extract_html
+from app.extractors.pdf import extract_pdf_pages
 from app.models.document import DocumentCreate
 
 
@@ -18,7 +19,7 @@ def health():
 
 @app.post("/document")
 def create_document(document:DocumentCreate):
-  # content = Path("samples/broadband-programme.html").read_bytes()
-  # to_markdown = extract_html(content)
-  # print(to_markdown)
+  # content = Path("samples/ties-one-year-on-annex.pdf").read_bytes()
+  # pages = extract_pdf_pages(content)
+  # print(f"Pages: {len(pages)}")
   return document
