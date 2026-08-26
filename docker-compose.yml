@@ -1,0 +1,11 @@
+services:
+  api:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - infrastructure_data:/app/data
+
+volumes:
+  infrastructure_data:

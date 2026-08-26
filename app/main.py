@@ -1,4 +1,6 @@
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
 from time import perf_counter
@@ -7,6 +9,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFi
 from fastapi.responses import JSONResponse
 from pydantic import HttpUrl
 
+from app.db.connection import initialize_database
 from app.extractors.html import extract_html
 from app.extractors.pdf import extract_pdf_pages
 from app.logging_config import configure_logging
@@ -31,6 +34,12 @@ configure_logging()
 logger = logging.getLogger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    initialize_database()
+    yield
+
+
 def _truncate_for_log(value: str, limit: int = 200) -> str:
     if len(value) <= limit:
         return value
@@ -41,6 +50,7 @@ def _truncate_for_log(value: str, limit: int = 200) -> str:
 app = FastAPI(
     title="Infrastructure Search API",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 
