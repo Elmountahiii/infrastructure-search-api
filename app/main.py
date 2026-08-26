@@ -9,6 +9,7 @@ from app.extractors.pdf import extract_pdf_pages
 from app.models.document import DocumentCreate, DocumentDetail, DocumentSummary
 from app.models.ingestion import IngestionResult
 from app.models.search import SearchResult
+from app.models.stats import StatsResponse
 from app.services.content_hashing import calculate_content_hash
 from app.services.document_extraction import extract_document
 from app.services.document_storage import (
@@ -19,6 +20,7 @@ from app.services.document_storage import (
 )
 from app.services.search import search_documents
 from app.services.sectioning import split_into_sections
+from app.services.stats import get_stats
 
 
 app = FastAPI(
@@ -30,6 +32,14 @@ app = FastAPI(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get(
+    "/stats",
+    response_model=StatsResponse,
+)
+def stats() -> StatsResponse:
+    return get_stats()
 
 
 @app.get(
