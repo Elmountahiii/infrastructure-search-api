@@ -1,8 +1,36 @@
 from datetime import date
 import re
+import sqlite3
 
 from app.db.connection import get_connection
 from app.models.search import SearchResult
+
+
+class InvalidSearchQueryError(Exception):
+    pass
+
+
+def _is_fts_query_error(
+    error: sqlite3.OperationalError,
+    query: str,
+) -> bool:
+    message = str(error).lower()
+
+    if any(
+        marker in message
+        for marker in (
+            "fts5: syntax error",
+            "malformed match expression",
+            "unterminated string",
+        )
+    ):
+        return True
+
+    if message.startswith("no such column:"):
+        column = message.removeprefix("no such column:").strip()
+        return f"{column}:" in query.lower()
+
+    return False
 
 
 def search_documents(
@@ -42,47 +70,56 @@ def search_documents(
 
         where_clause = " AND ".join(conditions)
 
-        rows = connection.execute(
-            f"""
-            SELECT
-                d.id AS document_id,
-                s.id AS section_id,
-                d.title,
-                s.section_title,
+        try:
+            rows = connection.execute(
+                f"""
+                SELECT
+                    d.id AS document_id,
+                    s.id AS section_id,
+                    d.title,
+                    s.section_title,
 
-                snippet(
-                    sections_fts,
-                    1,
-                    '[',
-                    ']',
-                    '...',
-                    25
-                ) AS snippet,
+                    snippet(
+                        sections_fts,
+                        1,
+                        '[',
+                        ']',
+                        '...',
+                        25
+                    ) AS snippet,
 
-                d.source,
-                d.url,
-                d.region,
-                d.category,
-                d.publication_date,
+                    d.source,
+                    d.url,
+                    d.region,
+                    d.category,
+                    d.publication_date,
 
-                -bm25(sections_fts) AS score
+                    -bm25(sections_fts) AS score
 
-            FROM sections_fts
+                FROM sections_fts
 
-            JOIN sections AS s
-                ON s.id = sections_fts.rowid
+                JOIN sections AS s
+                    ON s.id = sections_fts.rowid
 
-            JOIN documents AS d
-                ON d.id = s.document_id
+                JOIN documents AS d
+                    ON d.id = s.document_id
 
-            WHERE {where_clause}
+                WHERE {where_clause}
 
-            ORDER BY bm25(sections_fts)
+                ORDER BY bm25(sections_fts)
 
-            LIMIT ?
-            """,
-            (*params, limit),
-        ).fetchall()
+                LIMIT ?
+                """,
+                (*params, limit),
+            ).fetchall()
+
+        except sqlite3.OperationalError as exc:
+            if _is_fts_query_error(exc, query):
+                raise InvalidSearchQueryError(
+                    "Invalid FTS5 query"
+                ) from exc
+
+            raise
 
         results = []
 
