@@ -1,16 +1,49 @@
+from datetime import date
+import re
+
 from app.db.connection import get_connection
 from app.models.search import SearchResult
 
 
 def search_documents(
     query: str,
+    category: str | None = None,
+    region: str | None = None,
+    source: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
     limit: int = 20,
 ) -> list[SearchResult]:
     connection = get_connection()
 
     try:
+        conditions = ["sections_fts MATCH ?"]
+        params: list[object] = [query]
+
+        if category:
+            conditions.append("d.category = ?")
+            params.append(category)
+
+        if region:
+            conditions.append("d.region = ?")
+            params.append(region)
+
+        if source:
+            conditions.append("d.source = ?")
+            params.append(source)
+
+        if date_from:
+            conditions.append("d.publication_date >= ?")
+            params.append(date_from.isoformat())
+
+        if date_to:
+            conditions.append("d.publication_date <= ?")
+            params.append(date_to.isoformat())
+
+        where_clause = " AND ".join(conditions)
+
         rows = connection.execute(
-            """
+            f"""
             SELECT
                 d.id AS document_id,
                 s.id AS section_id,
@@ -20,8 +53,8 @@ def search_documents(
                 snippet(
                     sections_fts,
                     1,
-                    '<mark>',
-                    '</mark>',
+                    '[',
+                    ']',
                     '...',
                     25
                 ) AS snippet,
@@ -42,19 +75,29 @@ def search_documents(
             JOIN documents AS d
                 ON d.id = s.document_id
 
-            WHERE sections_fts MATCH ?
+            WHERE {where_clause}
 
             ORDER BY bm25(sections_fts)
 
             LIMIT ?
             """,
-            (query, limit),
+            (*params, limit),
         ).fetchall()
 
-        return [
-            SearchResult(**dict(row))
-            for row in rows
-        ]
+        results = []
+
+        for row in rows:
+            data = dict(row)
+
+            data["snippet"] = re.sub(
+                r"\s+",
+                " ",
+                data["snippet"],
+            ).strip()
+
+            results.append(SearchResult(**data))
+
+        return results
 
     finally:
         connection.close()

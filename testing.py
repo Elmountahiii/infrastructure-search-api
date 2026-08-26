@@ -17,7 +17,10 @@ PROJECT_ROOT = Path(__file__).parent
 
 
 def main() -> None:
-  results = search_documents("Heathrow")
+  results = search_documents(
+      query="Heathrow",
+
+  )
   for result in results:
       print("---")
       print("TITLE:", result.title)
