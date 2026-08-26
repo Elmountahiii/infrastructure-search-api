@@ -106,6 +106,10 @@ Then open <http://localhost:8000/docs>.
 
 Compose runs one FastAPI container and maps host port 8000 to container port 8000. A named volume, `infrastructure_data`, is mounted at `/app/data`, so `/app/data/infrastructure.db` survives container recreation.
 
+When the container starts, it waits for the API health endpoint and then runs
+`scripts/ingest_samples.py`. Existing sample documents are skipped through the
+API's duplicate detection, so restarting the container does not create copies.
+
 Stop the service while retaining indexed data:
 
 ```bash
@@ -281,7 +285,7 @@ The current suite contains 25 tests covering API flows, extraction, text and PDF
 
 ## Sample Documents
 
-The repository currently includes a small `samples/` directory with four development documents spanning the supported formats. It is not yet the planned assessment corpus of at least ten public/freely reusable or fictional infrastructure documents. Expanding and documenting that corpus is separate remaining work; this Docker/README task does not add samples or a batch loader.
+The repository currently includes a small `samples/` directory with four development documents spanning the supported formats. Docker ingests these documents automatically at container startup through `scripts/ingest_samples.py`. It is not yet the planned assessment corpus of at least ten public/freely reusable or fictional infrastructure documents.
 
 ## Assumptions and Limitations
 
@@ -309,6 +313,6 @@ The repository currently includes a small `samples/` directory with four develop
 - Add OCR for scanned PDFs
 - Improve PDF layout and heading detection
 - Add document and search pagination
-- Complete the curated ten-document sample corpus and provide a simple sample loader
+- Complete the curated ten-document sample corpus
 - Persist richer ingestion metrics such as failures and duplicate attempts
 - Define a stronger category and region taxonomy

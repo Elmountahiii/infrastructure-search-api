@@ -1,0 +1,2 @@
+agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url,agency_email
+1,SWU Verkehr GmbH,https://www.swu.de/privatkunden/produkte-leistungen/nahverkehr,Europe/Berlin,de,+49 731 166-0,https://www.swu.de/privatkunden/produkte-leistungen/nahverkehr/tickets-tarife,info@swu.de

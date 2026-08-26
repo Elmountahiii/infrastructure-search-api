@@ -18,5 +18,4 @@ app/data/
 *.db
 *.db-*
 tests/
-samples/
 testing.py
