@@ -19,6 +19,17 @@ def _upload_text(client: TestClient, content: bytes = b"Bridge reinforcement pro
     )
 
 
+def test_root(client: TestClient) -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "message": "Welcome to the Infrastructure Search API",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
 def test_health(client: TestClient) -> None:
     response = client.get("/health")
 

@@ -6,6 +6,11 @@ Infrastructure Search API is a fictional Regional Infrastructure Intelligence te
 
 The service accepts PDF, HTML, Markdown, and TXT files. It is intentionally a small, self-contained local demonstration rather than a production document platform.
 
+A live hosted version is available at
+[https://infrastructure-api.elmountahi.dev/](https://infrastructure-api.elmountahi.dev/).
+Interactive API documentation is available at
+[https://infrastructure-api.elmountahi.dev/docs](https://infrastructure-api.elmountahi.dev/docs).
+
 ## Features
 
 - Multi-format document ingestion through `multipart/form-data`
@@ -126,6 +131,7 @@ docker compose down --volumes
 
 | Method | Path | Description |
 | --- | --- | --- |
+| `GET` | `/` | Return a welcome message and useful API links. |
 | `GET` | `/health` | Return service health. |
 | `POST` | `/documents` | Extract, section, and index one uploaded document. |
 | `GET` | `/documents` | List indexed documents with their section counts. |
