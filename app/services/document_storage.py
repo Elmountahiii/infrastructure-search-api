@@ -2,6 +2,13 @@ from app.db.connection import get_connection
 from app.models.document import DocumentCreate
 from app.models.section import Section
 
+
+class DuplicateDocumentError(Exception):
+    def __init__(self, document_id: int) -> None:
+        self.document_id = document_id
+        super().__init__(f"Document already exists with id {document_id}")
+
+
 def find_document_by_hash(content_hash: str) -> int | None:
     connection = get_connection()
 
@@ -42,9 +49,7 @@ def save_document(
         ).fetchone()
 
         if existing:
-            raise ValueError(
-                f"Duplicate document: existing document id={existing['id']}"
-            )
+            raise DuplicateDocumentError(existing["id"])
 
         cursor = connection.execute(
             """
