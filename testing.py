@@ -8,6 +8,7 @@ from app.services.content_hashing import calculate_content_hash
 from app.services.document_extraction import extract_document
 from app.services.document_storage import save_document
 from app.services.pdf_cleaning import remove_repeated_headers_footers
+from app.services.search import search_documents
 from app.services.sectioning import split_into_sections
 from app.services.text_cleaning import clean_text
 
@@ -16,29 +17,14 @@ PROJECT_ROOT = Path(__file__).parent
 
 
 def main() -> None:
-    initialize_database()
-    content = (PROJECT_ROOT / "samples" / "ties-one-year-on-annex.pdf").read_bytes()
-    text = extract_document(content=content,file_type="pdf")
-    content_hash= calculate_content_hash(text=text)
-    sections = split_into_sections(text=text)
-    connection = get_connection()
-    rows = connection.execute(
-        """
-        SELECT
-            rowid,
-            section_title,
-            text
-        FROM sections_fts
-        WHERE sections_fts MATCH ?
-        """,
-        ("modularisation",),
-    ).fetchall()
-    
-    for row in rows:
-        print(dict(row))
-    
-    connection.close()
-    
+  results = search_documents("Heathrow")
+  for result in results:
+      print("---")
+      print("TITLE:", result.title)
+      print("SECTION:", result.section_title)
+      print("SCORE:", result.score)
+      print("SNIPPET:", result.snippet)
+
     # print("------ SECTIONS -------")
     # for section in sections:
     # print(f"index: {section.order} :\ntitle: {section.title}:\ntext: {section.text}\n")
