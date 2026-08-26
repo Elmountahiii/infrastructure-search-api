@@ -161,8 +161,8 @@ Example:
 curl -X POST http://localhost:8000/documents \
   -F "file=@samples/rail-report.txt;type=text/plain" \
   -F "title=Regional Rail Development Report" \
-  -F "source=Regional Infrastructure Authority" \
-  -F "url=https://example.org/reports/rail-development" \
+  -F "source=Regional Infrastructure Authority (Fictional)" \
+  -F "url=https://example.org/fictional/rail-development" \
   -F "category=transport" \
   -F "region=Bavaria" \
   -F "publication_date=2025-04-10"
@@ -287,11 +287,11 @@ Run the test suite with:
 uv run pytest
 ```
 
-The current suite contains 25 tests covering API flows, extraction, text and PDF cleaning, sectioning, storage and duplicate handling, FTS5 search/ranking/filtering, document retrieval, statistics, and error responses. Each test receives a fresh temporary SQLite database initialized from the production schema.
+The current suite contains 26 tests covering API flows, extraction, text and PDF cleaning, sectioning, storage and duplicate handling, FTS5 search/ranking/filtering, document retrieval, statistics, and error responses. Each test receives a fresh temporary SQLite database initialized from the production schema.
 
 ## Sample Documents
 
-The repository currently includes a small `samples/` directory with four development documents spanning the supported formats. Docker ingests these documents automatically at container startup through `scripts/ingest_samples.py`. It is not yet the planned assessment corpus of at least ten public/freely reusable or fictional infrastructure documents.
+The repository includes ten sample documents spanning PDF, HTML, Markdown, and TXT. Four are public or reusable development sources and six are explicitly labeled fictional demonstration documents. The corpus covers transport, infrastructure, energy, water, digital, and healthcare categories across several regions and publication dates. Docker ingests all ten documents automatically at container startup through `scripts/ingest_samples.py`.
 
 ## Assumptions and Limitations
 
@@ -319,6 +319,5 @@ The repository currently includes a small `samples/` directory with four develop
 - Add OCR for scanned PDFs
 - Improve PDF layout and heading detection
 - Add document and search pagination
-- Complete the curated ten-document sample corpus
 - Persist richer ingestion metrics such as failures and duplicate attempts
 - Define a stronger category and region taxonomy
