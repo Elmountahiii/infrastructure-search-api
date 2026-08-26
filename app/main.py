@@ -6,12 +6,17 @@ from pydantic import HttpUrl
 
 from app.extractors.html import extract_html
 from app.extractors.pdf import extract_pdf_pages
-from app.models.document import DocumentCreate
+from app.models.document import DocumentCreate, DocumentDetail, DocumentSummary
 from app.models.ingestion import IngestionResult
 from app.models.search import SearchResult
 from app.services.content_hashing import calculate_content_hash
 from app.services.document_extraction import extract_document
-from app.services.document_storage import DuplicateDocumentError, save_document
+from app.services.document_storage import (
+    DuplicateDocumentError,
+    get_document,
+    get_documents,
+    save_document,
+)
 from app.services.search import search_documents
 from app.services.sectioning import split_into_sections
 
@@ -25,6 +30,31 @@ app = FastAPI(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get(
+    "/documents",
+    response_model=list[DocumentSummary],
+)
+def list_documents() -> list[DocumentSummary]:
+    return get_documents()
+
+
+@app.get(
+    "/documents/{document_id}",
+    response_model=DocumentDetail,
+)
+def retrieve_document(document_id: int) -> DocumentDetail:
+    document = get_document(document_id)
+
+    if document is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found",
+        )
+
+    return document
+
 
 @app.post(
     "/documents",

@@ -1,6 +1,6 @@
 from app.db.connection import get_connection
-from app.models.document import DocumentCreate
-from app.models.section import Section
+from app.models.document import DocumentCreate, DocumentDetail, DocumentSummary
+from app.models.section import Section, SectionResponse
 
 
 class DuplicateDocumentError(Exception):
@@ -29,6 +29,91 @@ def find_document_by_hash(content_hash: str) -> int | None:
 
     finally:
         connection.close()
+
+
+def get_documents() -> list[DocumentSummary]:
+    connection = get_connection()
+
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                d.id,
+                d.title,
+                d.source,
+                d.url,
+                d.category,
+                d.region,
+                d.publication_date,
+                d.file_type,
+                d.created_at,
+                COUNT(s.id) AS sections_count
+            FROM documents AS d
+            LEFT JOIN sections AS s
+                ON s.document_id = d.id
+            GROUP BY d.id
+            ORDER BY d.id
+            """
+        ).fetchall()
+
+        return [DocumentSummary(**dict(row)) for row in rows]
+
+    finally:
+        connection.close()
+
+
+def get_document(document_id: int) -> DocumentDetail | None:
+    connection = get_connection()
+
+    try:
+        document_row = connection.execute(
+            """
+            SELECT
+                id,
+                title,
+                source,
+                url,
+                category,
+                region,
+                publication_date,
+                file_type,
+                created_at
+            FROM documents
+            WHERE id = ?
+            """,
+            (document_id,),
+        ).fetchone()
+
+        if document_row is None:
+            return None
+
+        section_rows = connection.execute(
+            """
+            SELECT
+                id,
+                section_title,
+                section_order,
+                text
+            FROM sections
+            WHERE document_id = ?
+            ORDER BY section_order
+            """,
+            (document_id,),
+        ).fetchall()
+
+        sections = [
+            SectionResponse(**dict(row))
+            for row in section_rows
+        ]
+
+        return DocumentDetail(
+            **dict(document_row),
+            sections=sections,
+        )
+
+    finally:
+        connection.close()
+
 
 def save_document(
     document: DocumentCreate,
