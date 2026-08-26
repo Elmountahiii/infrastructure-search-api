@@ -29,3 +29,72 @@ CREATE TABLE IF NOT EXISTS sections (
 
     UNIQUE(document_id, section_order)
 );
+
+CREATE VIRTUAL TABLE IF NOT EXISTS sections_fts USING fts5(
+    section_title,
+    text,
+    content='sections',
+    content_rowid='id'
+);
+
+
+CREATE TRIGGER IF NOT EXISTS sections_ai
+AFTER INSERT ON sections
+BEGIN
+    INSERT INTO sections_fts(
+        rowid,
+        section_title,
+        text
+    )
+    VALUES (
+        new.id,
+        new.section_title,
+        new.text
+    );
+END;
+
+CREATE TRIGGER IF NOT EXISTS sections_ad
+AFTER DELETE ON sections
+BEGIN
+    INSERT INTO sections_fts(
+        sections_fts,
+        rowid,
+        section_title,
+        text
+    )
+    VALUES (
+        'delete',
+        old.id,
+        old.section_title,
+        old.text
+    );
+END;
+
+
+-- CREATE TRIGGER IF NOT EXISTS sections_au
+-- AFTER UPDATE ON sections
+-- BEGIN
+--     INSERT INTO sections_fts(
+--         sections_fts,
+--         rowid,
+--         section_title,
+--         text
+--     )
+--     VALUES (
+--         'delete',
+--         old.id,
+--         old.section_title,
+--         old.text
+--     );
+
+--     INSERT INTO sections_fts(
+--         rowid,
+--         section_title,
+--         text
+--     )
+--     VALUES (
+--         new.id,
+--         new.section_title,
+--         new.text
+--     );
+-- END;

@@ -1,7 +1,7 @@
 from datetime import date
 from pathlib import Path
 
-from app.db.connection import initialize_database
+from app.db.connection import get_connection, initialize_database
 from app.extractors.pdf import extract_pdf_pages
 from app.models.document import DocumentCreate
 from app.services.content_hashing import calculate_content_hash
@@ -21,18 +21,36 @@ def main() -> None:
     text = extract_document(content=content,file_type="pdf")
     content_hash= calculate_content_hash(text=text)
     sections = split_into_sections(text=text)
+    connection = get_connection()
+    rows = connection.execute(
+        """
+        SELECT
+            rowid,
+            section_title,
+            text
+        FROM sections_fts
+        WHERE sections_fts MATCH ?
+        """,
+        ("modularisation",),
+    ).fetchall()
+    
+    for row in rows:
+        print(dict(row))
+    
+    connection.close()
+    
     # print("------ SECTIONS -------")
     # for section in sections:
-    #   print(f"index: {section.order} :\ntitle: {section.title}:\ntext: {section.text}\n")
-    doc = DocumentCreate(
-      title="ties-one-year-on-annex.pdf",
-      source="Fictional Regional Authority",
-      category="transportation",
-      region="London",
-      publication_date=date.fromisoformat("2025-04-10"),
-    )
-    docId = save_document(document=doc,content_hash=content_hash,file_type="pdf",sections=sections)
-    print(f"docId: {docId}")
+    # print(f"index: {section.order} :\ntitle: {section.title}:\ntext: {section.text}\n")
+    # doc = DocumentCreate(
+    #   title="ties-one-year-on-annex.pdf",
+    #   source="Fictional Regional Authority",
+    #   category="transportation",
+    #   region="London",
+    #   publication_date=date.fromisoformat("2025-04-10"),
+    # )
+    # docId = save_document(document=doc,content_hash=content_hash,file_type="pdf",sections=sections)
+    # print(f"docId: {docId}")
 
 if __name__ == "__main__":
     main()
